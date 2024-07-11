@@ -1,7 +1,32 @@
 ﻿@page "/"
 
-<PageTitle>Home</PageTitle>
+<PageTitle>+Money</PageTitle>
 
-<h1>Hello, world!</h1>
+<h1 class="text-center fonteAzul">Minhas finanças</h1>
+<br />
 
-Welcome to your new app.
+<div class="container mainHome">
+    <div class="containerInicial">
+        <table class="table table-striped">
+            <thead class="fonteAzul">
+                <tr>
+                    <th scope="col">Nome</th>
+                    <th scope="col">Movimentação</th>
+                    <th scope="col">Valor</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Compra vassoura</td>
+                    <td>Saída</td>
+                    <td>-12,00</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="containerGrafico">
+        <div class="divGafico"></div>
+        <div class="divLegenda"></div>
+
+    </div>
+</div>

@@ -6,6 +6,43 @@ h1:focus {
     outline: none;
 }
 
+/*  Inicio css Home.razor*/
+
+.mainHome {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+}
+
+.containerInicial {
+    width: 60%;
+}
+
+.containerGrafico {
+    width: 30%;
+    height: 500px;
+    display: flex;
+    flex-direction: column;
+}
+
+.divLegenda {
+    background-color: pink;
+    width: 100%;
+    height: 30%;
+}
+
+.divGafico {
+    background-color: black;
+    height: 70%;
+    border-radius: 50%;
+}
+
+
+/* fim css Home.razor*/
+.fonteAzul {
+    color: #2999EB;
+}
+
 a, .btn-link {
     color: #0071c1;
 }

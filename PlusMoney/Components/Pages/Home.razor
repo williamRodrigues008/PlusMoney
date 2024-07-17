@@ -1,0 +1,48 @@
+﻿@page "/"
+@using PlusMoney.API.Models;
+
+<PageTitle>+Money</PageTitle>
+
+<h1 class="text-center fonteAzul">Minhas finanças</h1>
+<br />
+
+<div class="container mainHome">
+    <div class="containerInicial">
+        <table class="table table-striped">
+            <thead class="fonteAzul">
+                <tr>
+                    <th scope="col">Nome</th>
+                    <th scope="col">Movimentação</th>
+                    <th scope="col">Valor</th>
+                </tr>
+            </thead>
+            <tbody>
+            @*    @foreach (var item in Prod)
+           {
+                <tr>
+                    <th>@item.Id</th>
+                    <th>@item.Nome</th>
+                    <th>@item.Quantidade</th>
+                    <th>@item.Valor</th>
+                    <th>@item.Medida</th>
+                    <th>
+                        <RadzenButton Icon="edit" class="btn btn-success"/>
+                        <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Click="@(args => AbrirModalConfirmacao(item.Id))"/>
+                    </th>
+                </tr>
+           } *@
+            </tbody>
+        </table>
+    </div>
+    <div class="containerGrafico">
+        <div class="divGafico"></div>
+        <div class="divLegenda"></div>
+
+    </div>
+</div>#if
+
+@code{
+    public List<Movimentacao>? Movimentacao { get; set; }
+
+    
+}

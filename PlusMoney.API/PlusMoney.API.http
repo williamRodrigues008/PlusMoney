@@ -1,6 +1,6 @@
 @PlusMoney.API_HostAddress = http://localhost:5292
 
-GET {{PlusMoney.API_HostAddress}}/weatherforecast/
+GET {{PlusMoney.API_HostAddress}}/
 Accept: application/json
 
 ###

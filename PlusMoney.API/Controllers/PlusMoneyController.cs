@@ -19,7 +19,15 @@ namespace PlusMoney.API.Controllers
         [HttpGet("GetMovimentacao")]
         public async Task<IActionResult> Index()
         {
-            return Json( await _Imovimentacao.ListarMovimentacao());
+            var listaMovimentacao = _Imovimentacao.ListarMovimentacao();
+            if (listaMovimentacao != null)
+            {
+                return Json(await listaMovimentacao);
+            }
+            else
+            {
+                return BadRequest();
+            }
         }
     }
 }

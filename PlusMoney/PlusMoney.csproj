@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\PlusMoney.API\PlusMoney.API.csproj" />
+	<PackageReference Include="Radzen.Blazor" Version="*" />
   </ItemGroup>
 
 </Project>

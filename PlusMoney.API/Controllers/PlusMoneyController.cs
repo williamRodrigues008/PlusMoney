@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using PlusMoney.API.Interfaces;
 using PlusMoney.API.Models;
 
@@ -8,9 +9,9 @@ namespace PlusMoney.API.Controllers
     public class PlusMoneyController : Controller
     {
         private readonly DbContexto _contextoDb;
-        private readonly IMovimentacao _Imovimentacao;
+        private readonly ILeituraEscritaMovimentacao _Imovimentacao;
 
-        public PlusMoneyController(DbContexto contextoDb, IMovimentacao imovimentacao)
+        public PlusMoneyController(DbContexto contextoDb, ILeituraEscritaMovimentacao imovimentacao)
         {
             _contextoDb = contextoDb;
             _Imovimentacao = imovimentacao;
@@ -28,6 +29,12 @@ namespace PlusMoney.API.Controllers
             {
                 return BadRequest();
             }
+        }
+
+        [HttpPost("AdicionarMovimentacao")]
+        public IActionResult AdicionarMovimentacao([FromBody] Movimentacao movimentacao)
+        {
+            return Json(_Imovimentacao.AdicionarMovimentacao(movimentacao));
         }
     }
 }

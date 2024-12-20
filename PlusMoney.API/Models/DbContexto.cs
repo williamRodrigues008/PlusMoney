@@ -8,5 +8,6 @@ namespace PlusMoney.API.Models
         public DbContexto(DbContextOptions<DbContexto> options) : base(options) { }
 
         public DbSet<Movimentacao> Movimentacao { get; set; }
+        public DbSet<Usuario> Usuario { get; set; }
     }
 }

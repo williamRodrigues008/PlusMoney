@@ -1,0 +1,54 @@
+﻿@page "/"
+@using PlusMoney.API.Models;
+
+@inject NavigationManager navManager;
+@inject HttpClient httpclient;
+
+<PageTitle>+Money</PageTitle>
+
+<h1 class="text-center fonteAzul">Minhas finanças</h1>
+<br />
+
+<div class="container mainHome">
+    <div class="containerInicial">
+        @if ( Movimentacao == null)
+        {
+            <h5>Não há itens a serem exibidos</h5>
+        }
+        else
+        {
+            <table class="table table-striped">
+                <thead class="fonteAzul">
+                    <tr>
+                        <th scope="col">Nome</th>
+                        <th scope="col">Movimentação</th>
+                        <th scope="col">Valor</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Movimentacao)
+                    {
+                        <tr>
+                            <th>@item.Descricao</th>
+                            <th>@item.TipoMovimentacao</th>
+                            <th>@item.Valor</th>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+    <div class="containerGrafico">
+        <div class="divGafico"></div>
+        <div class="divLegenda"></div>
+
+    </div>
+</div>
+@code{
+    public List<Movimentacao>? Movimentacao { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Movimentacao = await httpclient.GetFromJsonAsync<List<Movimentacao>>("https://localhost:7002/api/PlusMoney/GetMovimentacao/");
+    }
+}

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using PlusMoney.API.Interfaces;
 using PlusMoney.API.Models;
@@ -17,6 +18,7 @@ namespace PlusMoney.API.Controllers
             _Imovimentacao = imovimentacao;
         }
 
+        [Authorize]
         [HttpGet("GetMovimentacao")]
         public async Task<IActionResult> Index()
         {
@@ -29,6 +31,12 @@ namespace PlusMoney.API.Controllers
             {
                 return BadRequest();
             }
+        }
+
+        [HttpGet("GetMovimentacaoPorNome")]
+        public async Task<IActionResult> GetMovimentacaoPorNome(string nomeUsuario)
+        {
+            return Json(await _Imovimentacao.ListarMovimentacaoUsuario(nomeUsuario));
         }
 
         [HttpPost("AdicionarMovimentacao")]

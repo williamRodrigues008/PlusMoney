@@ -11,21 +11,31 @@ namespace PlusMoney.API.Controllers
     public class UsuarioController : Controller
     {
         private readonly IUsuarioLeituraEscrita _usuario;
-        private readonly UsuarioLogado _logado;
         private readonly DbContexto _contextoDb;
 
-        public UsuarioController(IUsuarioLeituraEscrita usuario, DbContexto contextoDb, UsuarioLogado logado)
+        public UsuarioController(IUsuarioLeituraEscrita usuario, DbContexto contextoDb)
         {
             _usuario = usuario;
             _contextoDb = contextoDb;
-            _logado = logado;
         }
 
         [HttpGet("BuscarUsuarios")]
-        [Authorize]
-        public ActionResult BuscarUsuarios()
+        [Authorize(Roles = "admin")]
+        public async Task<ActionResult> BuscarUsuarios()
         {
-            return Ok(_usuario.BuscarTodosUsuario());
+            var usuarios = await _usuario.BuscarTodosUsuario();
+            if (usuarios == null)
+                return BadRequest("Ops! houve um erro na busca de usuários");
+            return Json(usuarios);
+        }
+
+        [HttpPost]
+        [Route("/BuscarUsuarioPorNome")]
+        public IActionResult BuscarUsuarioPorNome(string nome) 
+        {
+            var usuarioEncontrado = _usuario.BuscarUsuario(nome);
+            if (usuarioEncontrado == null) return NotFound(new Usuario());
+            return Ok(usuarioEncontrado);
         }
 
 
@@ -38,19 +48,6 @@ namespace PlusMoney.API.Controllers
                 return Ok(_usuario.CriarUsuario(usuario));
             }
             return BadRequest("Não foi possivel criar este usuário");
-        }
-
-        [HttpPost("Logar")]
-        public IActionResult Logar([FromBody]Login login)
-        {
-            var usuario = _usuario.LoginUsuario(login);
-            if (ModelState.IsValid)
-            {
-                if(usuario == null) return NotFound("Senha e/ou usuário incorretos, corrija e tente novamente");
-                var token = new GerarTokenService().GerarToken(usuario);
-                return Json(token);
-            }
-            return BadRequest("Falha na requisição do login");
         }
     }
 }

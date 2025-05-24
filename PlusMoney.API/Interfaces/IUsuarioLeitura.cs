@@ -4,8 +4,7 @@ namespace PlusMoney.API.Interfaces
 {
     public interface IUsuarioLeitura
     {
-        Usuario LoginUsuario(Login login);
-        Usuario BuscarUsuario(string tipoBusca, string valorBusca);
+        Usuario BuscarUsuario(string nome);
         Task<IEnumerable<Usuario>> BuscarTodosUsuario();
 
     }

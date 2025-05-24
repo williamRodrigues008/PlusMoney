@@ -1,4 +1,5 @@
-﻿using PlusMoney.API.Helpers;
+﻿using Microsoft.EntityFrameworkCore;
+using PlusMoney.API.Helpers;
 using PlusMoney.API.Interfaces;
 using PlusMoney.API.Models;
 
@@ -7,10 +8,12 @@ namespace PlusMoney.API.Services
     public class UsuarioService : IUsuarioLeituraEscrita
     {
         private readonly DbContexto _contextoDb;
+        private readonly AutenticarUsuario _autenticar;
 
-        public UsuarioService(DbContexto contextoDb)
+        public UsuarioService(DbContexto contextoDb, AutenticarUsuario autenticar)
         {
             _contextoDb = contextoDb;
+            _autenticar = autenticar;
         }
 
         public void AtualizarUsuario(Usuario usuario)
@@ -20,12 +23,33 @@ namespace PlusMoney.API.Services
 
         public async Task<IEnumerable<Usuario>> BuscarTodosUsuario()
         {
-            return _contextoDb.Usuario.ToList();
+            var usuarios = await _contextoDb.Usuario.ToListAsync();
+
+            var roleUser = await _contextoDb.UserRoles
+                .Where(r => usuarios.Select(u => u.Id).Contains(r.UsuarioId)).ToListAsync();
+
+            var roleId = roleUser.Select(ru => ru.RoleId).Distinct();
+
+            var roles = await _contextoDb.Roles
+                .Where(r => roleId.Contains(r.Id))
+                .ToListAsync();
+
+
+            foreach (var usuario in usuarios)
+            {
+                var userRoles = roleUser
+                    .Where(ur => ur.UsuarioId == usuario.Id)
+                    .Select(ur => roles.First(r => r.Id == ur.RoleId).Name)
+                    .ToList();
+                usuario.ListaRoles = userRoles;
+            }
+            
+            return usuarios;
         }
 
-        public Usuario BuscarUsuario(string tipoBusca, string valorBusca)
+        public Usuario BuscarUsuario(string nome)
         {
-            throw new NotImplementedException();
+            return _contextoDb.Usuario.FirstOrDefault(x => x.NomeUsuario == nome)!;
         }
 
         public string CriarUsuario(Usuario usuario)
@@ -38,13 +62,6 @@ namespace PlusMoney.API.Services
             }
             return "Ops, houve um erro na criação da nova movimentação";
         }
-
-        public Usuario LoginUsuario(Login login)
-        {
-            login.Senha = login.Senha!.CriptografarSenha();
-            return _contextoDb.Usuario.FirstOrDefault(u => u.NomeUsuario!.ToLower() == login.Usuario!.ToLower() && u.Senha == login.Senha)!;
-        }
-
         public void RemoverUsuario(int id)
         {
             throw new NotImplementedException();

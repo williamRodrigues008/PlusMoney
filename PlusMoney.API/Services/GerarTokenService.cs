@@ -1,4 +1,5 @@
 ﻿using Microsoft.IdentityModel.Tokens;
+using PlusMoney.API.Helpers;
 using PlusMoney.API.Models;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -7,9 +8,9 @@ using System.Text;
 
 namespace PlusMoney.API.Services
 {
-    public class GerarTokenService
+    public static class GerarTokenService
     {
-        public dynamic GerarToken(Usuario usuario)
+        public static string GerarToken(Usuario usuario)
         {
             var claims = new List<Claim>
             {
@@ -18,22 +19,18 @@ namespace PlusMoney.API.Services
                 new Claim("Email", usuario.Email!),
                 new Claim("Id", usuario.Id.ToString())
             };
+            claims.AddRange(usuario.ListaRoles!.Select(role => new Claim(ClaimTypes.Role, role)));
 
-            var expiracao = DateTime.Now.AddDays(1);
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("key-plus-money-access-application"));
+
+            var expiracao = DateTime.Now.AddHours(8);
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuracoes.Key));
             var dadosToken = new JwtSecurityToken(
                     signingCredentials: new SigningCredentials(key, SecurityAlgorithms.HmacSha256),
                     claims: claims,
                     expires: expiracao
                 );
 
-            var token = new JwtSecurityTokenHandler().WriteToken(dadosToken);
-
-            return new
-            {
-                access_token = token,
-                expires = expiracao
-            };
+            return new JwtSecurityTokenHandler().WriteToken(dadosToken);
         }
     }
 }

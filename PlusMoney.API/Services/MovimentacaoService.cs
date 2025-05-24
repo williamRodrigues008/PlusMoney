@@ -1,4 +1,5 @@
-﻿using PlusMoney.API.Interfaces;
+﻿using Microsoft.EntityFrameworkCore;
+using PlusMoney.API.Interfaces;
 using PlusMoney.API.Models;
 
 namespace PlusMoney.API.Services
@@ -26,7 +27,12 @@ namespace PlusMoney.API.Services
 
         public async Task<IEnumerable<Movimentacao>> ListarMovimentacao()
         {
-            return _contextoDb.Movimentacao.ToList();
+            return _contextoDb.Movimentacao;
+        }
+
+        public async Task<IEnumerable<Movimentacao>> ListarMovimentacaoUsuario(string nomeUsuario)
+        {
+            return _contextoDb.Movimentacao.Where(x => x.NomeUsuario == nomeUsuario);
         }
     }
 }

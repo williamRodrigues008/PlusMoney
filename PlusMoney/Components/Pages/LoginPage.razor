@@ -1,0 +1,93 @@
+﻿@page "/"
+@layout MainLayoutLogout;
+@attribute [AllowAnonymous];
+
+@using Microsoft.AspNetCore.Authorization;
+@using Microsoft.AspNetCore.Components.Authorization;
+@using Newtonsoft.Json;
+@using PlusMoney.API.Helpers
+@using PlusMoney.API.Models;
+@using PlusMoney.Components.Helpers
+@using PlusMoney.Components.Layout;
+@using PlusMoney.Models
+@using Radzen;
+@using System;
+
+@inject NavigationManager navigationManager;
+@inject IJSRuntime JS;
+@inject HttpClient httpclient;
+@rendermode InteractiveServer
+
+<h1 class="text-center">Login</h1>
+@if (!string.IsNullOrEmpty(Mensagem) && (StatusCodeReturned))
+{
+    <div class="alert alert-success alert-dismissible fade show col-sl-9" role="alert">
+        @Mensagem
+    </div>
+}
+else if (!string.IsNullOrEmpty(Mensagem) && (!StatusCodeReturned))
+{
+    <div class="alert alert-danger alert-dismissible fade show col-sm-12" role="alert">
+        @Mensagem
+    </div>
+}
+<div class="formLogin">
+    <EditForm Model="@_Login"OnValidSubmit="LogarConta" FormName="_Login">
+        <div>
+            <section class="container-fluid">
+                <h4>Dados para login</h4>
+                <div class="itemsFormularioUsuario">
+                    <RadzenFormField Text="Usuário" Variant="@variant">
+                        <RadzenTextBox type="text" @bind-Value="_Login.Usuario" />
+                    </RadzenFormField>
+                </div>
+                <div class="itemsFormularioUsuario">
+                    <RadzenFormField Text="Senha" Variant="@variant">
+                        <RadzenTextBox type="password" @bind-Value="_Login.Senha" />
+                    </RadzenFormField>
+                </div>
+            </section>
+            <hr />
+            <div class="container" style="display:flex; justify-content: center;">
+                <RadzenButton Icon="arrow_forward" ButtonType="Radzen.ButtonType.Submit" ButtonStyle="ButtonStyle.Success" Style="width: 250px;" />
+            </div>
+        </div>
+    </EditForm>
+</div>
+
+
+@code {
+    Login _Login = new();
+    private string Mensagem = string.Empty;
+    private bool StatusCodeReturned;
+    Variant variant = Variant.Outlined;
+
+    private async Task LogarConta()
+    {
+        if (string.IsNullOrEmpty(_Login.Usuario) || string.IsNullOrEmpty(_Login.Senha))
+        {
+            var campoNulo = string.IsNullOrEmpty(_Login.Usuario) ? string.IsNullOrEmpty(_Login.Senha) ? "os campos [Senha] e [Usuário]" : "o [Usuário]" : "a [Senha]";
+            StatusCodeReturned = false;
+            Mensagem = $"Ops! {campoNulo} deve ser prenchido";
+        }
+        else
+        {
+            var realizarLogin = await httpclient.PostAsJsonAsync<Login>($"{Settings.URL_API}/v1/login", _Login!);
+            if (realizarLogin.IsSuccessStatusCode)
+            {
+                var result = realizarLogin.Content.ReadAsStringAsync().Result;
+                var usuario = JsonConvert.DeserializeObject<UsuarioToken>(result);
+                await JS.InvokeVoidAsync("localStorage.setItem", "token", usuario?.Token);
+                Mensagem = "Login efetuado";
+                await Task.Delay(3000);
+                
+                navigationManager.NavigateTo($"/home");
+            }
+            else
+            {
+                var response = realizarLogin.Content.ReadAsStringAsync();
+                Mensagem = response.Result;
+            }
+        }
+    }
+}

@@ -1,54 +1,190 @@
-﻿@page "/"
-@using PlusMoney.API.Models;
+﻿@page "/home"
 
-@inject NavigationManager navManager;
+@using Newtonsoft.Json
+@using PlusMoney.API.Enums
+@using PlusMoney.API.Models;
+@using PlusMoney.Components.Helpers
+
 @inject HttpClient httpclient;
+@inject IJSRuntime JS;
+@inject DialogService DialogService
 
 <PageTitle>+Money</PageTitle>
 
-<h1 class="text-center fonteAzul">Minhas finanças</h1>
+<h1 class="fonteAzul">Minhas finanças</h1>
 <br />
-
+<div class="container">
+    <RadzenButton Text="Adicionar movimentação" ButtonStyle="ButtonStyle.Success" Click=@AddMovimentacao/>
+</div>
+<br />
+<br />
 <div class="container mainHome">
-    <div class="containerInicial">
-        @if ( Movimentacao == null)
-        {
-            <h5>Não há itens a serem exibidos</h5>
-        }
-        else
-        {
-            <table class="table table-striped">
-                <thead class="fonteAzul">
-                    <tr>
-                        <th scope="col">Nome</th>
-                        <th scope="col">Movimentação</th>
-                        <th scope="col">Valor</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var item in Movimentacao)
-                    {
-                        <tr>
-                            <th>@item.Descricao</th>
-                            <th>@item.TipoMovimentacao</th>
-                            <th>@item.Valor</th>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        }
-    </div>
+    <RadzenStack Gap="0.5rem" class="containerInicial">
+        <RadzenDataGrid Data="@Movimentacao" PagerPosition="@pagerPosition" AllowPaging="true" AllowSorting="true">
+            <Columns>
+                <RadzenDataGridColumn Property="Descricao" Title="Descrição" Width="200px" />
+                <RadzenDataGridColumn Property="TipoMovimentacao" Title="Tipo movimentação" Width="200px" >
+                    <Template Context="tipo">
+                        @if (tipo.TipoMovimentacaoEnum == TipoMovimentacaoEnum.Entrada)
+                        {
+                            <span style="color: green">
+                                @tipo.TipoMovimentacao
+                            </span>
+                        }
+                        else
+                        {
+                            <span style="color: red">
+                                @tipo.TipoMovimentacao
+                            </span>
+                        }
+                    </Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn Property="Valor" Title="Valor" Width="200px">
+                    <Template Context="movimentacao" >
+                        @if (movimentacao.TipoMovimentacaoEnum == TipoMovimentacaoEnum.Entrada)
+                        {
+                            <span style="color: green">
+                                @String.Format(new System.Globalization.CultureInfo("pt-BR"), "{0:C}", movimentacao.Valor)
+                            </span>
+                        }
+                        else
+                        {
+                            <span style="color: red">
+                                @String.Format(new System.Globalization.CultureInfo("pt-BR"), "{0:C}", movimentacao.Valor)
+                            </span>
+                        }
+
+                    </Template>
+                </RadzenDataGridColumn>
+            </Columns>
+        </RadzenDataGrid>
+    </RadzenStack>
     <div class="containerGrafico">
-        <div class="divGafico"></div>
-        <div class="divLegenda"></div>
+        <div class="divLegenda">
+            <div class="dadosSaldo">
+                <span>Total entradas:</span><span style ="color: green">@TotalEntradas</span>
+             </div>
+            <div class="dadosSaldo">
+                <span>Total saídas: </span><span style="color: red"> - @TotalSaidas</span>
+            </div>
+            <hr />
+            <div class="dadosSaldo">
+                <strong>Saldo total:</strong><strong style="color: dodgerblue">@SaldoTotalEmConta</strong>
+            </div>
+        </div>
 
     </div>
-</div>
+</div>
+
 @code{
-    public List<Movimentacao>? Movimentacao { get; set; }
+    public IEnumerable<Movimentacao>? Movimentacao { get; set; }
+    PagerPosition pagerPosition = PagerPosition.Bottom;
+    public decimal TotalEntradas { get; set; }
+    public decimal TotalSaidas{ get; set; }
+    public decimal SaldoTotalEmConta{ get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        Movimentacao = await httpclient.GetFromJsonAsync<List<Movimentacao>>("https://localhost:7002/api/PlusMoney/GetMovimentacao/");
+        var token = await JS.InvokeAsync<string>("localStorage.getItem", "token");
+        httpclient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        Movimentacao = await httpclient.GetFromJsonAsync<List<Movimentacao>>($"{Settings.URL_API}/api/PlusMoney/GetMovimentacao/");
+        foreach (var item in Movimentacao!)
+        {
+            if (item.TipoMovimentacaoEnum == TipoMovimentacaoEnum.Entrada)
+                TotalEntradas += item.Valor;
+            else
+                TotalSaidas += item.Valor;
+        }
+    }
+
+    public async Task AddMovimentacao()
+    {
+
+        await DialogService.OpenAsync<NovaMovimentacao>(null,
+                null,
+               new DialogOptions()
+                   {
+                       Resizable = true,
+                       Draggable = true,
+                       Resize = OnResize,
+                       Drag = OnDrag,
+                       Width = Setting != null ? Setting.Width : "700px",
+                       Height = Setting != null ? Setting.Height : "512px",
+                       Left = Setting != null ? Setting.Left : null,
+                       Top = Setting != null ? Setting.Top : null
+                   });
+
+        await SaveStateAsync();
+    }
+
+    void OnDrag(System.Drawing.Point point)
+    {
+        JS.InvokeVoidAsync("eval", $"console.log('Dialog drag. Left:{point.X}, Top:{point.Y}')");
+
+        if (Setting == null)
+        {
+            Setting = new DialogSettings();
+        }
+
+        Setting.Left = $"{point.X}px";
+        Setting.Top = $"{point.Y}px";
+
+        InvokeAsync(SaveStateAsync);
+    }
+
+    void OnResize(System.Drawing.Size size)
+    {
+
+        if (Setting == null)
+        {
+            Setting = new DialogSettings();
+        }
+
+        Setting.Width = $"{size.Width}px";
+        Setting.Height = $"{size.Height}px";
+
+        InvokeAsync(SaveStateAsync);
+    }
+
+    DialogSettings _settings;
+    public DialogSettings Setting
+    {
+        get
+        {
+            return _settings;
+        }
+        set
+        {
+            if (_settings != value)
+            {
+                _settings = value;
+                InvokeAsync(SaveStateAsync);
+            }
+        }
+    }
+
+    private async Task LoadStateAsync()
+    {
+        await Task.CompletedTask;
+
+        var result = await JS.InvokeAsync<string>("window.localStorage.getItem", "DialogSettings");
+        if (!string.IsNullOrEmpty(result))
+        {
+            _settings = JsonConvert.DeserializeObject<DialogSettings>(result)!;
+        }
+    }
+
+    private async Task SaveStateAsync()
+    {
+        await Task.CompletedTask;
+        await JS.InvokeVoidAsync("window.localStorage.setItem", "DialogSettings", JsonConvert.SerializeObject(Setting));
+    }
+
+    public class DialogSettings
+    {
+        public string Left { get; set; }
+        public string Top { get; set; }
+        public string Width { get; set; }
+        public string Height { get; set; }
     }
 }

@@ -1,0 +1,94 @@
+﻿@page "/novoUsuarioPerfil"
+
+@using PlusMoney.API.Models
+@using PlusMoney.Components.Helpers
+@using Radzen;
+@inject IJSRuntime jsrutime;
+@inject HttpClient httpclient;
+@rendermode InteractiveServer
+
+<h1 class="fonteAzul">Adicionar Usuário</h1>
+
+@if (!string.IsNullOrEmpty(Mensagem) && (StatusCodeReturned))
+{
+    <div class="alert alert-success alert-dismissible fade show col-sm-3" role="alert">
+        @Mensagem
+    </div>
+}
+else if (!string.IsNullOrEmpty(Mensagem) && (!StatusCodeReturned))
+{
+    <div class="alert alert-danger alert-dismissible fade show col-sm-3" role="alert">
+        @Mensagem
+    </div>
+}
+<div class="divCadastro">
+    <EditForm Model="@Usuario" OnValidSubmit="AdicionarUsuario" FormName="Usuario">
+        <div class="formUsuario">
+            <section class="container-fluid">
+                <h4>Dados pessoais</h4>
+                <hr />
+                <div class="itemsFormularioUsuario">
+                    <RadzenFormField Text="Nome completo" Variant="@variant">
+                        <RadzenTextBox type="text" @bind-Value="Usuario.NomeCompleto" />
+                    </RadzenFormField>
+                </div>
+            </section>
+
+            <section class="container-fluid">
+                <h4>Dados da conta</h4>
+                <hr />
+                <div class="itemsFormularioUsuario">
+                    <RadzenFormField Text="Nome usuário" Variant="@variant">
+                        <RadzenTextBox @bind-Value="Usuario.NomeUsuario" />
+                    </RadzenFormField>
+                </div>
+                <div class="itemsFormularioUsuario">
+                    <RadzenFormField Text="E-mail" Variant="@variant">
+
+                        <RadzenTextBox @bind-Value="Usuario.Email" />
+                    </RadzenFormField>
+                </div>
+                <div class="itemsFormularioUsuario">
+                    <RadzenFormField Text="Senha" Variant="@variant">
+
+                        <RadzenPassword @bind-Value="Usuario.Senha" />
+                    </RadzenFormField>
+                </div>
+                <div class="itemsFormularioUsuario">
+                    <label for="@Usuario.Admin">Administrador?</label>
+                    <InputCheckbox class="form-check-input" @bind-Value="@Usuario.Admin" />
+                </div>
+            </section>
+        </div>
+        <hr />
+        <div class="container" style="display:flex; justify-content: center;">
+            <RadzenButton ButtonType="Radzen.ButtonType.Submit" Text="Adicionar Usuario" ButtonStyle="ButtonStyle.Success" />
+        </div>
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+    </EditForm>
+</div>
+
+
+@code {
+    private Usuario Usuario = new();
+    private string Mensagem = string.Empty;
+    private bool StatusCodeReturned = true;
+
+    Variant variant = Variant.Outlined;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+    }
+
+    public async Task AdicionarUsuario()
+    {
+        var adicionarUsuario = await httpclient.PostAsJsonAsync<Usuario>($"{Settings.URL_API}/api/Usuario/CriarUsuario/", Usuario!);
+        StatusCodeReturned = adicionarUsuario.IsSuccessStatusCode;
+        if (StatusCodeReturned)
+            Mensagem = $"Usuário \"{Usuario.NomeUsuario}\" criado com sucesso";
+        else
+            Mensagem = $"Ops! houve um erro ao criar o novo usuario: {Usuario.NomeUsuario}";
+    }
+}

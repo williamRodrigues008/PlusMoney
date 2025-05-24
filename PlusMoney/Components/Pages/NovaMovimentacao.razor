@@ -1,0 +1,75 @@
+﻿@page "/novaMovimentacao";
+
+@using PlusMoney.API.Enums
+@using PlusMoney.API.Models
+@using PlusMoney.Components.Helpers
+@using Radzen;
+@inject IJSRuntime jsRuntime;
+@inject HttpClient httpclient;
+@rendermode InteractiveServer
+
+<h1 class="text-center fonteAzul">Nova Movimentação</h1>
+<br/>
+
+<div>
+    @if (!string.IsNullOrEmpty(Mensagem) && (StatusCodeReturned))
+    {
+        <div class="alert alert-success alert-dismissible fade show col-sm-3" role="alert">
+            @Mensagem
+        </div>
+    }
+    else if (!string.IsNullOrEmpty(Mensagem) && (!StatusCodeReturned))
+    {
+        <div class="alert alert-danger alert-dismissible fade show col-sm-3" role="alert">
+            @Mensagem
+        </div>
+    }
+</div>
+<div class="divNovo">
+    <EditForm Model="@Movimentacao" OnValidSubmit="AdicionarMovimentacao" FormName="Movimentacao">
+        <div class="formMovimentacao">
+            <div class="itemsFormularioMovimentacao">
+                <label for="descricao">Descrição:</label><br />
+                <InputText class="form-control" type="text" @bind-Value="Movimentacao!.Descricao" />
+            </div>
+            <div class="itemsFormularioMovimentacao">
+                <label>Tipo Movimentação:</label><br />
+                <RadzenDropDown class="form-control" @bind-Value="TipoSelecionado"
+                Data="@Enum.GetValues(typeof(TipoMovimentacaoEnum))"></RadzenDropDown>
+            </div>
+            <div class="itemsFormularioMovimentacao">
+                <label>Valor:</label><br />
+                <InputNumber class="form-control" type="number" @bind-Value="@Movimentacao.Valor" />
+            </div>
+            <hr />
+            <div class="itemsFormularioMovimentacao">
+                <button type="submit" class="bt">Adicionar</button>
+            </div>
+        </div>
+        <DataAnnotationsValidator/>
+        <ValidationSummary/>
+    </EditForm>
+</div>
+
+@code {
+    public Movimentacao? Movimentacao = new();
+    public TipoMovimentacaoEnum TipoSelecionado = TipoMovimentacaoEnum.Entrada;
+    private bool StatusCodeReturned;
+    private string Mensagem = string.Empty;
+    
+
+    private async Task AdicionarMovimentacao()
+    {
+
+        var adicionouMovimentacao = await httpclient.PostAsJsonAsync<Movimentacao>($"{Settings.URL_API}/api/PlusMoney/AdicionarMovimentacao/", Movimentacao!);
+        if (adicionouMovimentacao.IsSuccessStatusCode)
+        {
+            await Task.Delay(100);
+            Mensagem = "Movimentação adicionada com sucesso";
+        }
+        else
+        {
+            Mensagem = "Ops! houve um erro ao gerar a nova movimentação.";
+        }
+    }
+}

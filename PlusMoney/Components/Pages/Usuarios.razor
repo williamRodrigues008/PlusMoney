@@ -1,0 +1,41 @@
+﻿@page "/usuario"
+@using PlusMoney.API.Models;
+@using PlusMoney.Components.Helpers
+
+@inject IJSRuntime JS
+@inject HttpClient httpclient
+
+<h3>Usuarios</h3>
+<div class="container">
+    <RadzenStack Gap="0.5rem" class="container">
+        <RadzenDataGrid Data="@Usuario" PagerPosition="@pagerPosition" AllowPaging="true" AllowSorting="true">
+            <Columns>
+                <RadzenDataGridColumn Property="NomeUsuario" Title="Usuário" Width="200px" />
+                <RadzenDataGridColumn Property="NomeCompleto" Title="Nome" Width="200px"/>
+                <RadzenDataGridColumn Property="Email" Title="E-mail" Width="200px"/>
+                <RadzenDataGridColumn Property="ListaRoles" Title="Roles" Width="200px">
+                    <Template Context="ListaRoles">
+                        <span>@ListaRoles.ListaRoles</span>
+                    </Template>
+                </RadzenDataGridColumn>
+            </Columns>
+        </RadzenDataGrid>
+    </RadzenStack>
+</div>
+
+@code {
+    PagerPosition pagerPosition = PagerPosition.Bottom;
+    public List<Usuario> Usuario { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var token = await ObterToken();
+        httpclient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        Usuario = await httpclient.GetFromJsonAsync<List<Usuario>>($"{Settings.URL_API}/api/Usuario/BuscarUsuarios");
+    }
+
+    private async Task<string> ObterToken()
+    {
+        return await JS.InvokeAsync<string>("localStorage.getItem", "token");
+    }
+}
